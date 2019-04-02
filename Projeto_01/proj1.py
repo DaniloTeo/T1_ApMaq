@@ -63,17 +63,33 @@ class Hog:
                     cells_per_block=(1, 1), visualize=True, multichannel=False, block_norm = "L1")
 				#print(img_name + str(hog_desc))
 				self.icmc.append(hog_desc)
-		print(np.asarray(self.icmc).shape)
 		np.save("./datasets/icmc.npy", np.asarray(self.icmc))
+
+	def hog_ORLFaces(self):
+		path = "./datasets/OrlFaces20/s"
+		for folder in range(1, 21):
+			p = path + str(folder) + "/"
+
+			for i in range(1, 11):
+				img_name = p + str(i) + ".pgm"
+
+				img = sk.io.imread(img_name, as_gray=True)
+
+				hog_desc, hog_image = hog(img, orientations=8, pixels_per_cell=(16, 16),
+                    cells_per_block=(1, 1), visualize=True, multichannel=False, block_norm = "L1")
+				#print(img_name + str(hog_desc))
+				self.orl_faces.append(hog_desc)
+		print(np.asarray(self.orl_faces).shape)
+		np.save("./datasets/orl_faces.npy", np.asarray(self.orl_faces))
 
 # for i in range(1,21):
 # 	a = Aug(i)
 # 	a.aug_set()
 
 h = Hog()
-h.hog_ICMC()
+h.hog_ORLFaces()
 
 
-print(np.load("./datasets/icmc.npy").shape)
+print(np.load("./datasets/orl_faces.npy").shape)
 
 
