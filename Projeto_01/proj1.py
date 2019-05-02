@@ -6,9 +6,9 @@ from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import Perceptron
-
-
+from sklearn.neural_network import MLPClassifier
+from sklearn.decomposition import PCA
+from sklearn.metrics import confusion_matrix
 
 class Aug:
 	def __init__(self,filename):
@@ -111,9 +111,18 @@ class KNN:
 		return np.mean(scores)
 	
 	def knn_test(self):
-		print("KNN, K = 3: " + str(self.knn_fold(3)))
-		print("KNN, K = 5: " + str(self.knn_fold(5)))
-		print("KNN, K = 7: " + str(self.knn_fold(7)))
+		print("KNN0, K = 3: " + str(self.knn_fold(3)))
+		print("KNN1, K = 5: " + str(self.knn_fold(5)))
+		print("KNN2, K = 7: " + str(self.knn_fold(7)))
+
+	def confusion(self):
+		classifier = KNeighborsClassifier(n_neighbors = 3)
+		X_train, X_test, y_train, y_test = train_test_split(self.dataset, self.target, test_size=0.2, random_state=42)
+		classifier.fit(X_train, y_train)
+		pred = classifier.predict(X_test)
+		conf = confusion_matrix(y_test, pred)
+		#falta precisao e acuracia
+	
 
 class Perc:
 	def __init__(self, data_name):
@@ -121,7 +130,7 @@ class Perc:
 		self.target = np.load("./datasets/" + data_name + "_target.npy")
 
 	def perc_fold(self, momentum, tamanho, aprendizado):
-		classifier = Perceptron(hidden_layer_sizes=tamanho, learning_rate=aprendizado, momentum=momentum)
+		classifier = MLPClassifier(hidden_layer_sizes=tamanho, learning_rate_init=aprendizado, momentum=momentum)
 		skf = StratifiedKFold(n_splits=10)
 		scores = []
 		for train_i, test_i in skf.split(self.dataset, self.target):
@@ -131,19 +140,76 @@ class Perc:
 		return np.mean(scores)
 
 	def perc_test(self):
-		print("to do")
+		print("Perceptron0: momentum: 0,2, n camadas: 1, aprendizado: 0,5 : " + str(self.perc_fold(0.2, (100,), 0.5)))
+		print("Perceptron1: momentum: 0,2, n camadas: 2, aprendizado: 0,5 : " + str(self.perc_fold(0.2, (100, 100), 0.5)))
+		print("Perceptron2: momentum: 0,2, n camadas: 1, aprendizado: 0,9 : " + str(self.perc_fold(0.2, (100,), 0.9)))
+		print("Perceptron3: momentum: 0,2, n camadas: 2, aprendizado: 0,9 : " + str(self.perc_fold(0.2, (100, 100), 0.9)))
+		print("Perceptron4: momentum: 0,9, n camadas: 1, aprendizado: 0,5 : " + str(self.perc_fold(0.9, (100,), 0.5)))
+		print("Perceptron5: momentum: 0,9, n camadas: 2, aprendizado: 0,5 : " + str(self.perc_fold(0.9, (100, 100), 0.5)))
+		print("Perceptron6: momentum: 0,9, n camadas: 1, aprendizado: 0,9 : " + str(self.perc_fold(0.9, (100,), 0.9)))
+		print("Perceptron7: momentum: 0,9, n camadas: 2, aprendizado: 0,9 : " + str(self.perc_fold(0.9, (100, 100), 0.9)))
+
+	def confusion(self):
+		classifier = MLPClassifier(hidden_layer_sizes=(100,), learning_rate_init=0.5, momentum=0.9)
+		X_train, X_test, y_train, y_test = train_test_split(self.dataset, self.target, test_size=0.2, random_state=42)
+		classifier.fit(X_train, y_train)
+		pred = classifier.predict(X_test)
+		conf = confusion_matrix(y_test, pred)
+		#falta precisao e acuracia
 
 
-# for i in range(1,21):
-# 	a = Aug(i)
-# 	a.aug_set()
+class PrincCompAna:
+	def __init__(self, data_name):
+		self.dataset = np.load("./datasets/" + data_name + ".npy")
+		self.data_name = data_name
 
-# h = Hog()
-# h.hog_ICMC()
-# h.hog_ORLFaces()
+	def apply_pca(self):
+		p = PCA(n_components=0.5, svd_solver='full')
+		reduced_dataset = p.fit_transform(self.dataset)
+		pca_target = np.load("./datasets/" + self.data_name + "_target.npy")
+		np.save("./datasets/" + self.data_name + "pca_target.npy", pca_target)
+		np.save("./datasets/" + self.data_name + "pca.npy", np.asarray(reduced_dataset))
 
 
+print("ORLFACES20")
+data_name = "orl"
+K = KNN(data_name)
+P = Perc(data_name)
+K.knn_test()
+P.perc_test()
+print("KNN0 e Perceptron4 sao melhores")
+print("Matriz de confusao KNN0")
+K.confusion()
+print("Matriz de confusao Perceptron4")
+P.confusion()
 
+print("ICMC")
+data_name = "icmc"
+K = KNN(data_name)
+P = Perc(data_name)
+K.knn_test()
+P.perc_test()
+print("KNN0 e Perceptron4 sao melhores")
+print("Matriz de confusao KNN0")
+K.confusion()
+print("Matriz de confusao Perceptron4")
+P.confusion()
+
+print("ORLFACES20 PCA")
+data_name = "orlpca"
+K = KNN(data_name)
+P = Perc(data_name)
+print("Matriz de confusao KNN0")
+K.confusion()
+print("Matriz de confusao Perceptron4")
+P.confusion()
+
+print("ICMC PCA")
+data_name = "icmcpca"
+print("Matriz de confusao KNN0")
+K.confusion()
+print("Matriz de confusao Perceptron4")
+P.confusion()
 
 
 
