@@ -1,3 +1,9 @@
+# Reconhecimento de Faces
+# Aprendizado de Máquina - SCC0276
+# Danilo da Costa Telles Téo	9293626
+# Rodrigo Valim Maciel			9278149
+
+
 from skimage.io import imread
 import skimage as sk
 from skimage.feature import hog
@@ -10,6 +16,9 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix
 
+# Classe para Data Augmentation da Base de Dados de pessoas do ICMC. São aplicados variados métodos para alterar a imagem
+# fornecida, focando em permutações de associações de aplicação de ruídos e rotação da imagem. 
+# Salva em disco na pasta da pessoa 'aumentada' e com um indice de [1,9] como apendice. Ex.: p20/203.png
 class Aug:
 	def __init__(self,filename):
 		self.loc = "./datasets/PessoasICMC/p"
@@ -47,6 +56,10 @@ class Aug:
 			fname = self.filename + str(i) + ".png"
 			sk.io.imsave(fname, self.aug_img[i-1])
 
+
+# Classe para fazer extração dos HOGs de cada uma das bases de dados de maneira organizada e salvar em disco.	
+# Salva os HOGs de cada base dentro da pasta 'datasets'. Para cada base são gerados dois arrays numpy, um contendo
+# os HOGs das imagens alvo (Ex.: icmc_target.npy) e outro contendo o restante das imagens (Ex.: icmc.npy).
 class Hog:
 	def __init__(self):
 		self.icmc = []
@@ -95,88 +108,9 @@ class Hog:
 		np.save("./datasets/orl_target.npy", np.asarray(orl_target))
 		np.save("./datasets/orl.npy", np.asarray(self.orl_faces))
 
-class KNN:
-	def __init__(self, data_name):
-		self.dataset = np.load("./datasets/" + data_name + ".npy")
-		self.target = np.load("./datasets/" + data_name + "_target.npy")
-		self.models = {}
 
-	def knn_fold(self, id, k):
-		self.models[str(id)] = {"class": KNeighborsClassifier(n_neighbors = k),
-								"k": k,
-								"score": 0
-		}
-		skf = StratifiedKFold(n_splits=10)
-		scores = []
-		for train_i, test_i in skf.split(self.dataset, self.target):
-			self.models[str(id)]["class"].fit(self.dataset[train_i], self.target[train_i])
-			score = self.models[str(id)]["class"].score(self.dataset[test_i], self.target[test_i])
-			scores.append(score)
-		self.models[str(id)]["score"] = np.mean(scores)
-	
-	def knn_test(self):
-		self.knn_fold(0, 3)
-		self.knn_fold(1, 5)
-		self.knn_fold(2, 7)
-		for c in self.models:
-			print("KNN " + str(c) + "= " + str(self.models[c]["score"]))
-
-
-	def confusion(self):
-		classifier = KNeighborsClassifier(n_neighbors = 3)
-		X_train, X_test, y_train, y_test = train_test_split(self.dataset, self.target, test_size=0.2, random_state=42)
-		classifier.fit(X_train, y_train)
-		pred = classifier.predict(X_test)
-		conf = confusion_matrix(y_test, pred)
-		print(conf)
-		#falta precisao e acuracia
-	
-
-class Perc:
-	def __init__(self, data_name):
-		self.dataset = np.load("./datasets/" + data_name + ".npy")
-		self.target = np.load("./datasets/" + data_name + "_target.npy")
-		self.models = {}
-
-	def perc_fold(self,id, momentum, tamanho, aprendizado):
-		
-		self.models[str(id)] = {"class": MLPClassifier(hidden_layer_sizes=tamanho, learning_rate_init=aprendizado, momentum=momentum),
-								"tamanho": tamanho,
-								"momentum": momentum,
-								"aprendizado": aprendizado,
-								"score": 0
-		}
-		skf = StratifiedKFold(n_splits=10)
-		scores = []
-		for train_i, test_i in skf.split(self.dataset, self.target):
-			self.models[str(id)]["class"].fit(self.dataset[train_i], self.target[train_i])
-			score = self.models[str(id)]["class"].score(self.dataset[test_i], self.target[test_i])
-			scores.append(score)
-		self.models[str(id)]["score"] = np.mean(scores)
-
-	def perc_test(self):
-		self.perc_fold(0, 0.2, (500,), 0.5)
-		self.perc_fold(1, 0.2, (500,), 0.9)
-		self.perc_fold(2, 0.2, (500, 500,), 0.5)
-		self.perc_fold(3, 0.2, (500, 500,), 0.9)
-		self.perc_fold(4, 0.9, (500,), 0.5)
-		self.perc_fold(5, 0.9, (500,), 0.9)
-		self.perc_fold(6, 0.9, (500, 500,), 0.5)
-		self.perc_fold(7, 0.9, (500, 500,), 0.9)
-		for c in self.models:
-			print("Perceptron " + str(c) + "= " + str(self.models[c]["score"]))
-
-
-	def confusion(self):
-		classifier = MLPClassifier(hidden_layer_sizes=(100,), learning_rate_init=0.5, momentum=0.9)
-		X_train, X_test, y_train, y_test = train_test_split(self.dataset, self.target, test_size=0.2, random_state=42)
-		classifier.fit(X_train, y_train)
-		pred = classifier.predict(X_test)
-		conf = confusion_matrix(y_test, pred)
-		print(conf)
-		#falta precisao e acuracia
-
-
+# Aplica o PCA para uma base de dados, cujo filename é fornecido por argumento. São salvos em disco dois array numpy, um
+# para os target (pca_target.npy) e outro para o restante dos HOGs (pca.npy)
 class PrincCompAna:
 	def __init__(self, data_name):
 		self.dataset = np.load("./datasets/" + data_name + ".npy")
@@ -190,45 +124,205 @@ class PrincCompAna:
 		np.save("./datasets/" + self.data_name + "pca.npy", np.asarray(reduced_dataset))
 
 
+# Configura diversos classificadores KNN. Realiza o treinamento e o teste, utilizando 10-fold validation,
+# associando cada score a seu devido classificador, organizados em uma lista de Dictionaries
+class KNN:
+	def __init__(self, data_name):
+		self.dataset = np.load("./datasets/" + data_name + ".npy")
+		self.target = np.load("./datasets/" + data_name + "_target.npy")
+		self.models = []
+
+	def knn_fold(self, id, k):
+		self.models.append({"class": KNeighborsClassifier(n_neighbors = k),
+										"k": k,
+										"score": 0,
+										"id": id})
+		skf = StratifiedKFold(n_splits=10)
+		scores = []
+		for train_i, test_i in skf.split(self.dataset, self.target):
+			self.models[id]["class"].fit(self.dataset[train_i], self.target[train_i])
+			score = self.models[id]["class"].score(self.dataset[test_i], self.target[test_i])
+			scores.append(score)
+		self.models[id]["score"] = np.mean(scores)
+	
+	def knn_test(self):
+		self.knn_fold(0, 3)
+		self.knn_fold(1, 5)
+		self.knn_fold(2, 7)
+		for c in range(len(self.models)):
+			print("KNN " + str(c) + "= " + str(self.models[c]["score"]))
+
+	def get_best_knn(self):
+		aux = sorted(self.models, key=lambda k: k['score'], reverse=True)
+		return aux[0]
+
+
+	def confusion(self):
+		classifier = self.get_best_knn()
+		X_train, X_test, y_train, y_test = train_test_split(self.dataset, self.target, test_size=0.2, random_state=42)
+		classifier['class'].fit(X_train, y_train)
+		pred = classifier['class'].predict(X_test)
+		conf = confusion_matrix(y_test, pred)
+		precisions = np.zeros([len(conf),])
+		acc = np.trace(conf)/np.sum(conf)
+		for line in range(len(conf)):
+			if np.sum(conf[line]) != 0:
+				precisions[line] = conf[line][line]/(np.sum(conf[line]))
+			else:
+				precisions[line] = 0
+
+		print("Matriz de confusao Perceptron " + str(classifier['id']))
+		print(conf)
+		print("Acuracia: " + str(acc))
+		print("Precisoes por Classe:")
+		for i in range(len(precisions)):
+			print("\tClasse " + str(i) + ": " + str(precisions[i]))
+	
+
+# Configura diversos classificadores Multilayer Perceptron. Realiza o treinamento e o teste, utilizando 10-fold validation,
+# associando cada score a seu devido classificador, organizados em uma lista de Dictionaries
+class Perc:
+	def __init__(self, data_name):
+		self.dataset = np.load("./datasets/" + data_name + ".npy")
+		self.target = np.load("./datasets/" + data_name + "_target.npy")
+		self.models = []
+
+	def perc_fold(self,id, momentum, tamanho, aprendizado):
+		
+		self.models.append({"class": MLPClassifier(hidden_layer_sizes=tamanho, learning_rate_init=aprendizado, momentum=momentum),
+										"tamanho": tamanho,
+										"momentum": momentum,
+										"aprendizado": aprendizado,
+										"score": 0,
+										"id": id})
+		skf = StratifiedKFold(n_splits=10)
+		scores = []
+		for train_i, test_i in skf.split(self.dataset, self.target):
+			self.models[id]["class"].fit(self.dataset[train_i], self.target[train_i])
+			score = self.models[id]["class"].score(self.dataset[test_i], self.target[test_i])
+			scores.append(score)
+		self.models[id]["score"] = np.mean(scores)
+
+	def perc_test(self):
+		self.perc_fold(0, 0.2, (500,), 0.5)
+		self.perc_fold(1, 0.2, (500,), 0.9)
+		self.perc_fold(2, 0.2, (500, 500,), 0.5)
+		self.perc_fold(3, 0.2, (500, 500,), 0.9)
+		self.perc_fold(4, 0.9, (500,), 0.5)
+		self.perc_fold(5, 0.9, (500,), 0.9)
+		self.perc_fold(6, 0.9, (500, 500,), 0.5)
+		self.perc_fold(7, 0.9, (500, 500,), 0.9)
+		for c in range(len(self.models)):
+			print("Perceptron " + str(c) + "= " + str(self.models[c]['score']))
+
+
+	def get_best_perc(self):
+		aux = sorted(self.models, key=lambda k: k['score'], reverse=True)
+		return aux[0]
+
+	def confusion(self):
+		classifier = self.get_best_perc()
+		X_train, X_test, y_train, y_test = train_test_split(self.dataset, self.target, test_size=0.2, random_state=42)
+		classifier['class'].fit(X_train, y_train)
+		pred = classifier['class'].predict(X_test)
+		conf = confusion_matrix(y_test, pred)
+		precisions = np.zeros([len(conf),])
+		acc = np.trace(conf)/np.sum(conf)
+		for line in range(len(conf)):
+			if np.sum(conf[line]) != 0:
+				precisions[line] = conf[line][line]/(np.sum(conf[line]))
+			else:
+				precisions[line] = 0
+
+		print("Matriz de confusao Perceptron " + str(classifier['id']))
+		print(conf)
+		print("Acuracia: " + str(acc))
+		print("Precisoes por Classe:")
+		for i in range(len(precisions)):
+			print("\tClasse " + str(i) + ": " + str(precisions[i]))
+
+
+
+# MAIN:
+#---------------------------------------------------------------------------------------------------------------------
+# Funções de execução única. Uma vez que este grupo de operações é executado ele não precisa ser executados para
+# os experimentos seguintes.
+
+
+# Data Augmentation da Base de Dados de Pessoas do ICMC, e escrita das imagens geradas no disco
+for i in range(1,21):
+	A = Aug(i)
+	A.aug_set()
+
+# Criação dos Histograms of Oriented Gradients (HOGs) de todas as imagens de ambas as bases de dados, escritos no disco
+H = Hog()
+H.hog_ICMC()
+H.hog_ORLFaces()
+
+# Aplicação da Principal Component Analysis (PCA) para ambas as bases de dados, também salvos em disco
+pca_icmc = PrincCompAna('icmc')
+pca_orl = PrincCompAna('orl')
+
+pca_icmc.apply_pca()
+pca_orl.apply_pca()
+
+#-----------------------------------------------------------------------------------------------------------
+# Treinamento e Medidas de Qualidade da Base de Dados ORLFaces20
 print("ORLFACES20")
 data_name = "orl"
+
+# Inicialização das classes de cada Classificador
 K = KNN(data_name)
 P = Perc(data_name)
+
+# Criação do classificador em si, assim como seu treinamento e teste
 K.knn_test()
 P.perc_test()
-#print("KNN0 e Perceptron4 sao melhores")
-#print("Matriz de confusao KNN0")
-# K.confusion()
-#print("Matriz de confusao Perceptron4")
-# P.confusion()
 
+# Calculo da matriz de confusão, assim como as medidas de Acurácia do classificador e de sua Precisão para cada classe
+K.confusion()
+P.confusion()
+
+
+# Treinamento e Medidas de Qualidade da Base de Dados de pessoas do ICMC
 print("ICMC")
 data_name = "icmc"
+
 K = KNN(data_name)
 P = Perc(data_name)
+
 K.knn_test()
 P.perc_test()
-# print("KNN0 e Perceptron4 sao melhores")
-# print("Matriz de confusao KNN0")
-# K.confusion()
-# print("Matriz de confusao Perceptron4")
-# P.confusion()
 
-# print("ORLFACES20 PCA")
-# data_name = "orlpca"
-# K = KNN(data_name)
-# P = Perc(data_name)
-# print("Matriz de confusao KNN0")
-# K.confusion()
-# print("Matriz de confusao Perceptron4")
-# P.confusion()
+K.confusion()
+P.confusion()
 
-# print("ICMC PCA")
-# data_name = "icmcpca"
-# print("Matriz de confusao KNN0")
-# K.confusion()
-# print("Matriz de confusao Perceptron4")
-# P.confusion()
+
+# Treinamento e Medidas de Qualidade da Base de Dados ORLFaces20 após aplicação do PCA
+print("ORLFACES20 PCA")
+data_name = "orlpca"
+
+K = KNN(data_name)
+P = Perc(data_name)
+
+K.knn_test()
+P.perc_test()
+
+K.confusion()
+P.confusion()
+
+print("ICMC PCA")
+data_name = "icmcpca"
+
+K = KNN(data_name)
+P = Perc(data_name)
+
+K.knn_test()
+P.perc_test()
+
+K.confusion()
+P.confusion()
+
 
 
 
