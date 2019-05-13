@@ -99,21 +99,28 @@ class KNN:
 	def __init__(self, data_name):
 		self.dataset = np.load("./datasets/" + data_name + ".npy")
 		self.target = np.load("./datasets/" + data_name + "_target.npy")
+		self.models = {}
 
-	def knn_fold(self, k):
-		classifier = KNeighborsClassifier(n_neighbors = k)
+	def knn_fold(self, id, k):
+		self.models[str(id)] = {"class": KNeighborsClassifier(n_neighbors = k),
+								"k": k,
+								"score": 0
+		}
 		skf = StratifiedKFold(n_splits=10)
 		scores = []
 		for train_i, test_i in skf.split(self.dataset, self.target):
-			classifier.fit(self.dataset[train_i], self.target[train_i])
-			score = classifier.score(self.dataset[test_i], self.target[test_i])
+			self.models[str(id)]["class"].fit(self.dataset[train_i], self.target[train_i])
+			score = self.models[str(id)]["class"].score(self.dataset[test_i], self.target[test_i])
 			scores.append(score)
-		return np.mean(scores)
+		self.models[str(id)]["score"] = np.mean(scores)
 	
 	def knn_test(self):
-		print("KNN0, K = 3: " + str(self.knn_fold(3)))
-		print("KNN1, K = 5: " + str(self.knn_fold(5)))
-		print("KNN2, K = 7: " + str(self.knn_fold(7)))
+		self.knn_fold(0, 3)
+		self.knn_fold(1, 5)
+		self.knn_fold(2, 7)
+		for c in self.models:
+			print("KNN " + str(c) + "= " + str(self.models[c]["score"]))
+
 
 	def confusion(self):
 		classifier = KNeighborsClassifier(n_neighbors = 3)
@@ -121,6 +128,7 @@ class KNN:
 		classifier.fit(X_train, y_train)
 		pred = classifier.predict(X_test)
 		conf = confusion_matrix(y_test, pred)
+		print(conf)
 		#falta precisao e acuracia
 	
 
@@ -128,26 +136,36 @@ class Perc:
 	def __init__(self, data_name):
 		self.dataset = np.load("./datasets/" + data_name + ".npy")
 		self.target = np.load("./datasets/" + data_name + "_target.npy")
+		self.models = {}
 
-	def perc_fold(self, momentum, tamanho, aprendizado):
-		classifier = MLPClassifier(hidden_layer_sizes=tamanho, learning_rate_init=aprendizado, momentum=momentum)
+	def perc_fold(self,id, momentum, tamanho, aprendizado):
+		
+		self.models[str(id)] = {"class": MLPClassifier(hidden_layer_sizes=tamanho, learning_rate_init=aprendizado, momentum=momentum),
+								"tamanho": tamanho,
+								"momentum": momentum,
+								"aprendizado": aprendizado,
+								"score": 0
+		}
 		skf = StratifiedKFold(n_splits=10)
 		scores = []
 		for train_i, test_i in skf.split(self.dataset, self.target):
-			classifier.fit(self.dataset[train_i], self.target[train_i])
-			score = classifier.score(self.dataset[test_i], self.target[test_i])
+			self.models[str(id)]["class"].fit(self.dataset[train_i], self.target[train_i])
+			score = self.models[str(id)]["class"].score(self.dataset[test_i], self.target[test_i])
 			scores.append(score)
-		return np.mean(scores)
+		self.models[str(id)]["score"] = np.mean(scores)
 
 	def perc_test(self):
-		print("Perceptron0: momentum: 0,2, n camadas: 1, aprendizado: 0,5 : " + str(self.perc_fold(0.2, (100,), 0.5)))
-		print("Perceptron1: momentum: 0,2, n camadas: 2, aprendizado: 0,5 : " + str(self.perc_fold(0.2, (100, 100), 0.5)))
-		print("Perceptron2: momentum: 0,2, n camadas: 1, aprendizado: 0,9 : " + str(self.perc_fold(0.2, (100,), 0.9)))
-		print("Perceptron3: momentum: 0,2, n camadas: 2, aprendizado: 0,9 : " + str(self.perc_fold(0.2, (100, 100), 0.9)))
-		print("Perceptron4: momentum: 0,9, n camadas: 1, aprendizado: 0,5 : " + str(self.perc_fold(0.9, (100,), 0.5)))
-		print("Perceptron5: momentum: 0,9, n camadas: 2, aprendizado: 0,5 : " + str(self.perc_fold(0.9, (100, 100), 0.5)))
-		print("Perceptron6: momentum: 0,9, n camadas: 1, aprendizado: 0,9 : " + str(self.perc_fold(0.9, (100,), 0.9)))
-		print("Perceptron7: momentum: 0,9, n camadas: 2, aprendizado: 0,9 : " + str(self.perc_fold(0.9, (100, 100), 0.9)))
+		self.perc_fold(0, 0.2, (500,), 0.5)
+		self.perc_fold(1, 0.2, (500,), 0.9)
+		self.perc_fold(2, 0.2, (500, 500,), 0.5)
+		self.perc_fold(3, 0.2, (500, 500,), 0.9)
+		self.perc_fold(4, 0.9, (500,), 0.5)
+		self.perc_fold(5, 0.9, (500,), 0.9)
+		self.perc_fold(6, 0.9, (500, 500,), 0.5)
+		self.perc_fold(7, 0.9, (500, 500,), 0.9)
+		for c in self.models:
+			print("Perceptron " + str(c) + "= " + str(self.models[c]["score"]))
+
 
 	def confusion(self):
 		classifier = MLPClassifier(hidden_layer_sizes=(100,), learning_rate_init=0.5, momentum=0.9)
@@ -155,6 +173,7 @@ class Perc:
 		classifier.fit(X_train, y_train)
 		pred = classifier.predict(X_test)
 		conf = confusion_matrix(y_test, pred)
+		print(conf)
 		#falta precisao e acuracia
 
 
@@ -177,11 +196,11 @@ K = KNN(data_name)
 P = Perc(data_name)
 K.knn_test()
 P.perc_test()
-print("KNN0 e Perceptron4 sao melhores")
-print("Matriz de confusao KNN0")
-K.confusion()
-print("Matriz de confusao Perceptron4")
-P.confusion()
+#print("KNN0 e Perceptron4 sao melhores")
+#print("Matriz de confusao KNN0")
+# K.confusion()
+#print("Matriz de confusao Perceptron4")
+# P.confusion()
 
 print("ICMC")
 data_name = "icmc"
@@ -189,27 +208,27 @@ K = KNN(data_name)
 P = Perc(data_name)
 K.knn_test()
 P.perc_test()
-print("KNN0 e Perceptron4 sao melhores")
-print("Matriz de confusao KNN0")
-K.confusion()
-print("Matriz de confusao Perceptron4")
-P.confusion()
+# print("KNN0 e Perceptron4 sao melhores")
+# print("Matriz de confusao KNN0")
+# K.confusion()
+# print("Matriz de confusao Perceptron4")
+# P.confusion()
 
-print("ORLFACES20 PCA")
-data_name = "orlpca"
-K = KNN(data_name)
-P = Perc(data_name)
-print("Matriz de confusao KNN0")
-K.confusion()
-print("Matriz de confusao Perceptron4")
-P.confusion()
+# print("ORLFACES20 PCA")
+# data_name = "orlpca"
+# K = KNN(data_name)
+# P = Perc(data_name)
+# print("Matriz de confusao KNN0")
+# K.confusion()
+# print("Matriz de confusao Perceptron4")
+# P.confusion()
 
-print("ICMC PCA")
-data_name = "icmcpca"
-print("Matriz de confusao KNN0")
-K.confusion()
-print("Matriz de confusao Perceptron4")
-P.confusion()
+# print("ICMC PCA")
+# data_name = "icmcpca"
+# print("Matriz de confusao KNN0")
+# K.confusion()
+# print("Matriz de confusao Perceptron4")
+# P.confusion()
 
 
 
