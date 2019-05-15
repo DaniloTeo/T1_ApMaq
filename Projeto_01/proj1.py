@@ -171,7 +171,7 @@ class KNN:
 			else:
 				precisions[line] = 0
 
-		print("Matriz de confusao Perceptron " + str(classifier['id']))
+		print("Matriz de confusao KNN " + str(classifier['id']))
 		print(conf)
 		print("Acuracia: " + str(acc))
 		print("Precisoes por Classe:")
