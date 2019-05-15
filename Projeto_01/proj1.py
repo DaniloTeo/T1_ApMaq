@@ -259,26 +259,26 @@ class Confusion:
 
 # MAIN:
 #---------------------------------------------------------------------------------------------------------------------
-# Funções de execução única. Uma vez que este grupo de operações é executado ele não precisa ser executados para
-# os experimentos seguintes.
+#Funções de execução única. Uma vez que este grupo de operações é executado ele não precisa ser executados para
+#os experimentos seguintes.
 
 
-# Data Augmentation da Base de Dados de Pessoas do ICMC, e escrita das imagens geradas no disco
-# for i in range(1,21):
-# 	A = Aug(i)
-# 	A.aug_set()
+#Data Augmentation da Base de Dados de Pessoas do ICMC, e escrita das imagens geradas no disco
+for i in range(1,21):
+	A = Aug(i)
+	A.aug_set()
 
-# # Criação dos Histograms of Oriented Gradients (HOGs) de todas as imagens de ambas as bases de dados, escritos no disco
-# H = Hog()
-# H.hog_ICMC()
-# H.hog_ORLFaces()
+# Criação dos Histograms of Oriented Gradients (HOGs) de todas as imagens de ambas as bases de dados, escritos no disco
+H = Hog()
+H.hog_ICMC()
+H.hog_ORLFaces()
 
-# # Aplicação da Principal Component Analysis (PCA) para ambas as bases de dados, também salvos em disco
-# pca_icmc = PrincCompAna('icmc')
-# pca_orl = PrincCompAna('orl')
+# Aplicação da Principal Component Analysis (PCA) para ambas as bases de dados, também salvos em disco
+pca_icmc = PrincCompAna('icmc')
+pca_orl = PrincCompAna('orl')
 
-# pca_icmc.apply_pca()
-# pca_orl.apply_pca()
+pca_icmc.apply_pca()
+pca_orl.apply_pca()
 
 #-----------------------------------------------------------------------------------------------------------
 # Treinamento e Medidas de Qualidade da Base de Dados ORLFaces20
