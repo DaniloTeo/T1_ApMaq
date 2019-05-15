@@ -162,7 +162,7 @@ class KNN:
 		X_train, X_test, y_train, y_test = train_test_split(self.dataset, self.target, test_size=0.2, random_state=42)
 		classifier['class'].fit(X_train, y_train)
 		pred = classifier['class'].predict(X_test)
-		conf = confusion_matrix(y_test, pred)
+		conf = Confusion(y_test, pred).con_mat
 		precisions = np.zeros([len(conf),])
 		acc = np.trace(conf)/np.sum(conf)
 		for line in range(len(conf)):
@@ -225,7 +225,7 @@ class Perc:
 		X_train, X_test, y_train, y_test = train_test_split(self.dataset, self.target, test_size=0.2, random_state=42)
 		classifier['class'].fit(X_train, y_train)
 		pred = classifier['class'].predict(X_test)
-		conf = confusion_matrix(y_test, pred)
+		conf = Confusion(y_test, pred).con_mat
 		precisions = np.zeros([len(conf),])
 		acc = np.trace(conf)/np.sum(conf)
 		for line in range(len(conf)):
@@ -241,6 +241,20 @@ class Perc:
 		for i in range(len(precisions)):
 			print("\tClasse " + str(i) + ": " + str(precisions[i]))
 
+class Confusion:
+	def __init__(self, y_test, pred):
+		self.y_test = y_test
+		self.pred = pred
+		self.con_mat = self.fill()
+
+	def fill(self):
+		mat = np.zeros([20,20]).astype(int)
+		self.y_test = self.y_test - 1
+		self.pred = self.pred - 1
+		for i in range(len(self.y_test)):
+			mat[self.y_test[i]][self.pred[i]] += 1
+		return mat	
+
 
 
 # MAIN:
@@ -250,21 +264,21 @@ class Perc:
 
 
 # Data Augmentation da Base de Dados de Pessoas do ICMC, e escrita das imagens geradas no disco
-for i in range(1,21):
-	A = Aug(i)
-	A.aug_set()
+# for i in range(1,21):
+# 	A = Aug(i)
+# 	A.aug_set()
 
-# Criação dos Histograms of Oriented Gradients (HOGs) de todas as imagens de ambas as bases de dados, escritos no disco
-H = Hog()
-H.hog_ICMC()
-H.hog_ORLFaces()
+# # Criação dos Histograms of Oriented Gradients (HOGs) de todas as imagens de ambas as bases de dados, escritos no disco
+# H = Hog()
+# H.hog_ICMC()
+# H.hog_ORLFaces()
 
-# Aplicação da Principal Component Analysis (PCA) para ambas as bases de dados, também salvos em disco
-pca_icmc = PrincCompAna('icmc')
-pca_orl = PrincCompAna('orl')
+# # Aplicação da Principal Component Analysis (PCA) para ambas as bases de dados, também salvos em disco
+# pca_icmc = PrincCompAna('icmc')
+# pca_orl = PrincCompAna('orl')
 
-pca_icmc.apply_pca()
-pca_orl.apply_pca()
+# pca_icmc.apply_pca()
+# pca_orl.apply_pca()
 
 #-----------------------------------------------------------------------------------------------------------
 # Treinamento e Medidas de Qualidade da Base de Dados ORLFaces20
